@@ -34,7 +34,6 @@ Diante desse cenário, a área de negócios solicitou apoio ao time de dados com
 O objetivo deste projeto é **estruturar uma análise analítica e exploratória da base de clientes**, utilizando **SQL e BI** para gerar métricas claras, confiáveis e reutilizáveis, apoiando a tomada de decisão estratégica do banco.
 
 ---
-
 ## 📊 Entregas Esperadas
 A análise foi estruturada para atender às seguintes demandas:
 
@@ -60,3 +59,12 @@ A análise foi estruturada para atender às seguintes demandas:
 ## 🧠 Abordagem Analítica
 As métricas foram construídas a partir de uma **VIEW base de clientes ativos**, garantindo **consistência, padronização e facilidade de manutenção**.  
 Os dados foram preparados para **consumo em ferramentas de BI**, permitindo análises visuais e acompanhamento contínuo dos indicadores.
+
+---
+
+## 🛠️ Tecnologias Utilizadas
+
+- SQL (views analíticas para consolidação de métricas)
+- Power BI (dashboards e visualização de indicadores)
+- Modelagem analítica focada em negócio
+
