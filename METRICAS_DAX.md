@@ -1,115 +1,249 @@
-# 📊 Métricas e Lógica Analítica — Banco Auruum
+# Métricas e KPIs — Lógica Analítica (DAX)
 
-Este documento descreve as principais métricas criadas no Power BI, explicando **por que elas existem** e **quais perguntas de negócio respondem**.  
-O foco é registrar a **lógica analítica** por trás das métricas, e não o DAX técnico, garantindo clareza, governança e reutilização.
+Este documento descreve a finalidade analítica das principais medidas DAX do projeto, explicando como são utilizadas e quais perguntas de negócio respondem.
 
 ---
 
-## 🧮 Total de Clientes Ativos
+## 🧱 Métricas Base
 
-**Descrição:**  
-Representa a base atual de clientes considerados ativos no período analisado.
-
-**Por que essa métrica existe:**  
-Foi criada para garantir que todas as análises sejam feitas sobre a base real de clientes em operação, evitando leituras baseadas em clientes históricos ou inativos.
+### Receita Total
+**Utilização:**  
+Mede o valor total movimentado no período selecionado.
 
 **Perguntas que responde:**  
-- Quantos clientes o banco possui atualmente?  
-- Qual é a base correta para tomada de decisão?
+- Quanto o banco faturou no período?
+- Como a receita evolui ao longo do tempo, regiões ou perfis de cliente?
+
+```DAX
+Receita Total =
+SUM ( fato_movimentacoes[valor_transacao] )
+```
 
 ---
 
-## 🧮 Clientes com Movimentação
-
-**Descrição:**  
-Indica o número de clientes que realizaram ao menos uma movimentação financeira no período.
-
-**Por que essa métrica existe:**  
-Permite diferenciar **status cadastral** de **atividade financeira**, evitando confusão entre clientes ativos e clientes que apenas possuem histórico de transações.
+### Total Clientes Ativos
+**Utilização:**  
+Quantifica os clientes com status ativo no período analisado.
 
 **Perguntas que responde:**  
-- Quantos clientes estão efetivamente utilizando os produtos do banco?  
-- Qual o nível de engajamento da base?
+- Qual é a base real de clientes do banco?
+- Sobre quantos clientes as decisões estão sendo tomadas?
+
+```DAX
+Total Clientes Ativos =
+CALCULATE (
+    DISTINCTCOUNT ( dim_cliente[cliente_id] ),
+    dim_cliente[status_cliente] = "Ativo")
+```
 
 ---
 
-## 🧮 Distribuição por Perfil (PF / PJ)
-
-**Descrição:**  
-Classifica a base de clientes ativos entre Pessoa Física (PF) e Pessoa Jurídica (PJ).
-
-**Por que essa métrica existe:**  
-Permite entender a composição da carteira e apoiar análises estratégicas sobre diversificação e potencial de crescimento do segmento PJ.
+### Clientes Premium
+**Utilização:**  
+Identifica a quantidade de clientes ativos classificados como Premium.
 
 **Perguntas que responde:**  
-- Qual é o perfil predominante da base atual?  
-- Existe dependência excessiva de clientes PF?
+- Quantos clientes de maior valor o banco possui?
+- Qual o peso do segmento Premium na base?
 
+```DAX
+Clientes Premium =
+CALCULATE (
+    DISTINCTCOUNT ( dim_cliente[cliente_id] ),
+    dim_cliente[perfil_cliente] = "Premium",
+    dim_cliente[status_cliente] = "Ativo")
+```
+  
 ---
 
-## 🧮 Distribuição por Categoria (Premium / Tradicional)
-
-**Descrição:**  
-Segmenta os clientes ativos entre categorias Premium e Tradicional.
-
-**Por que essa métrica existe:**  
-Essa métrica foi criada para avaliar a **qualidade da base**, não apenas o volume, permitindo análises focadas em valor e estratégias de conversão.
+### Clientes com Receita
+**Utilização:**  
+Conta os clientes que efetivamente geraram receita no período.
 
 **Perguntas que responde:**  
-- Qual a proporção de clientes Premium na base?  
-- Existe espaço para expansão do segmento Premium?
+- Quantos clientes estão monetizando?
+- Qual é a base real de geração de receita?
+
+```DAX
+Clientes com Receita =
+CALCULATE (
+    DISTINCTCOUNT ( fato_movimentacoes[cliente_id] ),
+    fato_movimentacoes[valor_transacao] > 0)
+```
 
 ---
 
-## 🧮 Clientes Ativos por Região
-
-**Descrição:**  
-Apresenta a distribuição da base ativa de clientes por região geográfica.
-
-**Por que essa métrica existe:**  
-Permite identificar concentração regional e apoiar decisões de priorização comercial e expansão territorial.
+### Quantidade de Transações
+**Utilização:**  
+Mede o volume total de transações realizadas.
 
 **Perguntas que responde:**  
-- Onde estão concentrados os clientes do banco?  
-- Quais regiões possuem maior base ativa?
+- O crescimento vem de volume ou de valor?
+- Qual o nível de uso dos produtos do banco?
+
+```DAX
+Qtd Transações =
+COUNT ( fato_movimentacoes[movimentacao_id] )
+```
 
 ---
 
-## 🧮 Clientes Premium por Região
+## 🟨 Métricas Derivadas
 
-**Descrição:**  
-Mostra a quantidade de clientes Premium distribuídos por região.
-
-**Por que essa métrica existe:**  
-Foi criada para identificar onde está concentrado o maior valor da base e avaliar riscos relacionados à dependência regional.
+### Ticket Médio
+**Utilização:**  
+Calcula a receita média por cliente que realizou movimentação financeira.
 
 **Perguntas que responde:**  
-- Em quais regiões está concentrada a base Premium?  
-- Existe concentração excessiva de valor em poucas regiões?
+- Quanto, em média, cada cliente que gera receita movimenta?
+- A receita cresce por valor ou por quantidade de clientes?
+
+```DAX
+Ticket Médio =
+DIVIDE (
+    [Receita Total],
+    [Clientes com Receita])
+```
 
 ---
 
-## 🧮 Evolução da Base de Clientes ao Longo do Tempo
-
-**Descrição:**  
-Acompanha a variação do número de clientes ativos ao longo dos anos.
-
-**Por que essa métrica existe:**  
-Permite avaliar tendências de crescimento, estagnação ou queda da base, apoiando análises sobre a sustentabilidade do crescimento do banco.
+### Receita por Cliente
+**Utilização:**  
+Relaciona a receita total à base de clientes ativos.
 
 **Perguntas que responde:**  
-- A base de clientes está crescendo, estável ou em queda?  
-- Em quais períodos ocorreram mudanças relevantes?
+- Quanto cada cliente ativo gera de receita?
+- A base está se tornando mais eficiente?
+
+```DAX
+Receita por Cliente =
+DIVIDE (
+    [Receita Total],
+    [Total Clientes Ativos])
+```
 
 ---
 
-## 📌 Consideração Analítica Final
+### Percentual de Clientes Premium
+**Utilização:**  
+Mede a proporção de clientes Premium em relação ao total de clientes ativos.
 
-As métricas foram definidas com foco em **clareza conceitual**, evitando sobreposição de significados e garantindo que cada indicador responda a uma pergunta específica do negócio.  
-Essa abordagem assegura consistência entre SQL, BI e os insights apresentados, fortalecendo a tomada de decisão orientada por dados.
+**Perguntas que responde:**  
+- Qual a participação do segmento Premium na base?
+- Existe espaço para estratégias de upsell?
+
+```DAX
+% Clientes Premium =
+DIVIDE (
+    [Clientes Premium],
+    [Total Clientes Ativos])
+```
+  
+---
+
+## 📈 Métricas Temporais
+
+### Receita Mês Anterior
+**Utilização:**  
+Retorna a receita do período imediatamente anterior.
+
+**Perguntas que responde:**  
+- Qual era o patamar recente de receita?
+- A receita está acelerando ou desacelerando?
+
+```DAX
+Receita Mês Anterior =
+CALCULATE (
+    [Receita Total],
+    DATEADD ( dim_tempo_corrigida[Data], -1, MONTH ))
+```
 
 ---
 
-## 🛠️ Observação Técnica
+### Total Clientes Ativos Ano Anterior
+**Utilização:**  
+Recupera a base de clientes ativos no mesmo período do ano anterior.
 
-As métricas foram construídas a partir de uma base consolidada de clientes ativos, preparada em SQL e posteriormente consumida no Power BI, garantindo padronização, governança e facilidade de manutenção.
+**Perguntas que responde:**  
+- A base cresceu ou encolheu em relação ao ano passado?
+- Qual era o tamanho histórico da base?
+
+```DAX
+Total Clientes Ativos Ano Anterior =
+CALCULATE (
+    [Total Clientes Ativos],
+    SAMEPERIODLASTYEAR ( dim_tempo_corrigida[Data] ))
+```
+
+---
+
+### Crescimento YoY Clientes (%)
+**Utilização:**  
+Calcula a variação percentual da base de clientes ativos em relação ao ano anterior.
+
+**Perguntas que responde:**  
+- O banco está crescendo em clientes?
+- Em que ritmo ocorre esse crescimento?
+
+```DAX
+Crescimento YoY Clientes (%) =
+DIVIDE (
+    [Total Clientes Ativos] - [Total Clientes Ativos Ano Anterior],
+    [Total Clientes Ativos Ano Anterior])
+```
+
+---
+
+### Crescimento YoY Receita (%)
+**Utilização:**  
+Mede a variação percentual da receita em relação ao mesmo período do ano anterior.
+
+**Perguntas que responde:**  
+- O faturamento está crescendo ou caindo?
+- O crescimento é sustentável?
+
+```DAX
+Crescimento YoY Receita (%) =
+VAR ReceitaAnoAtual =
+    [Receita Total]
+VAR ReceitaAnoAnterior =
+    CALCULATE (
+        [Receita Total],
+        SAMEPERIODLASTYEAR ( dim_tempo_corrigida[Data])
+    )
+RETURN
+DIVIDE (
+    ReceitaAnoAtual - ReceitaAnoAnterior,
+    ReceitaAnoAnterior)
+```
+
+---
+
+## 🧠 Métrica Analítica Avançada
+
+### Concentração Top 3 Regiões
+**Utilização:**  
+Calcula a parcela da receita total concentrada nas três regiões com maior faturamento.
+
+**Perguntas que responde:**  
+- A receita está concentrada em poucas regiões?
+- Existe risco de dependência regional?
+
+```DAX
+Concentracao Top 3 Regioes =
+DIVIDE (
+    CALCULATE (
+        [Receita Total],
+        KEEPFILTERS (
+            TOPN (
+                3,
+                VALUES ( dim_cliente[regiao] ),
+                [Receita Total],
+                DESC
+            )
+        )
+    ),
+    [Receita Total Geral]
+)
+```
+
